@@ -28,20 +28,24 @@ fn main() -> Result<(), std::io::Error> {
         },
     )
     .unwrap();
-    loop {
-        let (out, err) = p.communicate(Some("sending test"))?;
-        if let Some(out) = out {
-            debug!("SERVER out: {}", &out);
+    let commands = vec!["test", "exit"];
+    for command in commands {
+        debug!("sending command: {}", command);
+        let mut communicator = p.communicate_start(Some(command.as_bytes().to_vec()));
+        debug!("got communicator");
+        if let Ok((out, err)) = communicator.read() {
+            debug!("called communicate");
+            if let Some(out) = out {
+                debug!("SERVER out: {}", String::from_utf8_lossy(&out));
+            }
+            if let Some(err) = err {
+                debug!("SERVER err: {}", String::from_utf8_lossy(&err));
+            }
         }
-        if let Some(err) = err {
-            debug!("SERVER err: {}", &err);
-        }
-        // check if the process is still alive
         if let Some(exit_status) = p.poll() {
             debug!("child process exited with: {:?}", exit_status);
-        } else {
-            // it is still running, terminate it
-            p.terminate()?;
+            break;
         }
     }
+    p.terminate()
 }
