@@ -4,6 +4,11 @@ use log::*;
 use std::io::Write;
 use subprocess::{Popen, PopenConfig, Redirection};
 
+#[cfg(target_os = "windows")]
+static CLIENT_PATH: &str = "..\\process_client\\target\\debug\\process_client.exe";
+
+#[cfg(not(target_os = "windows"))]
+static CLIENT_PATH: &str = "../process_client/target/debug/process_client";
 fn main() -> Result<(), std::io::Error> {
     let mut builder = Builder::new();
     builder
@@ -15,11 +20,7 @@ fn main() -> Result<(), std::io::Error> {
     debug!("Hello, world!");
 
     let mut p = Popen::create(
-        &[
-            "..\\process_client\\target\\debug\\process_client.exe",
-            "arg1",
-            "arg2",
-        ],
+        &[CLIENT_PATH, "arg1", "arg2"],
         PopenConfig {
             stdout: Redirection::Pipe,
             stdin: Redirection::Pipe,
